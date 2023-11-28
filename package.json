@@ -5,8 +5,7 @@
   "description": "Forta Twitter Bot detects addresses mentioned in Twitter as Scammers",
   "longDescription": "",
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rodri-forta/Forta-Twitter-Bot.git"
+    "url": "https://github.com/rodri-forta/Forta-Twitter-Bot.git"
   },
   "licenseUrl": "https://github.com/forta-network/forta-bot-sdk/blob/master/starter-project/LICENSE.md",
   "promoUrl": "https://forta.org",

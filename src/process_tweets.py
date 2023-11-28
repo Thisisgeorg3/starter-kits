@@ -1,6 +1,26 @@
 import pandas as pd
 import re
 from datetime import datetime, timedelta
+import requests 
+import json
+
+def send_slack_message(custom_text):
+    slack_url = "https://hooks.slack.com/services/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"
+    message = {
+        "text": custom_text
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(slack_url, data=json.dumps(message), headers=headers)
+
+    if response.status_code == 200:
+        print("Message sent successfully")
+    else:
+        print("Error sending message. Response code: " + str(response.status_code))
+
 
 def process_tweets():
     # Load the CSV file into a DataFrame
@@ -46,10 +66,22 @@ def process_tweets():
 
     # Define a function to extract addresses from a text
     def extract_addresses(text):
-        return re.findall(r'\b0x[a-fA-F0-9]{40}\b', text)
+        # Find all 0x addresses
+        all_addresses = re.findall(r'\b0x[a-fA-F0-9]{40}\b', text)
+
+        # Filter out addresses preceded by 'victim' in various formats
+        valid_addresses = []
+        for address in all_addresses:
+            # Search for 'victim' pattern ending with the address in the text
+            if not re.search(r'\b(?i)victim\s*:?\s*' + re.escape(address), text):
+                valid_addresses.append(address)
+
+        return valid_addresses
 
     # Iterate through each row of the DataFrame
     for index, row in filtered_df.iterrows():
+        send_slack_message(row['Tweet'])
+        
         tweet_addresses = extract_addresses(row['Tweet'])
         hxxp_links = re.findall(url_pattern, row['Tweet'])
         
