@@ -43,6 +43,7 @@ def get_contract_deployer_BSC(BSC_scontract):
 
     # Define a limit for the number of transactions to retrieve
     transaction_limit = 1
+    deployer = 'none'
 
     # BscScan API endpoint to get transaction list for an address
     bscscan_url = f"https://api.bscscan.com/api?module=account&action=txlist&address={BSC_scontract}&startblock=0&endblock=99999999&page=1&offset={transaction_limit}&sort=asc&apikey={BSC_SCAN_TOKEN}"
@@ -69,6 +70,7 @@ def get_contract_deployer_ETH(ETH_scontract):
     contract_address = ETH_scontract
     # Define a limit for the number of transactions to retrieve
     transaction_limit = 1
+    deployer = "none"
 
     # BscScan API endpoint to get transaction list for an address
     bscscan_url = f"https://api.etherscan.io/api?module=account&action=txlist&address={ETH_scontract}&startblock=0&endblock=99999999&page=1&offset={transaction_limit}&sort=asc&apikey={ETH_SCAN_TOKEN}"
@@ -84,13 +86,16 @@ def get_contract_deployer_ETH(ETH_scontract):
         for tx in transactions:
             if tx['to'] == "":
                 deployer = tx['from']
+                print(f"Deployer: {deployer}")
+                 
             else: 
                 deployer = "none"
+                print(f"Deployer: {deployer}")
+
     else:
         print("Failed to fetch data from BscScan API.")
     
     return deployer
-
 
 
 
@@ -122,6 +127,7 @@ async def check_addresses():
                 chain = row['Chain ID'] if pd.notna(row['Chain ID']) else ''
                 tag = ''
                 
+                
                 # Add a time delay of 1 second between processing rows
                 time.sleep(1)  # Adjust the delay time as needed
                 
@@ -129,23 +135,29 @@ async def check_addresses():
                     tag = 'Smart Contract'
                     chain = '1'
                     deployer_EOA =  get_contract_deployer_ETH( checksum_address)
-                    print('Smart contract: ' + deployer_EOA)
+                    
                     if deployer_EOA != 'none':
+                        print('Smart contract deployer: ' + deployer_EOA)
                         with open('deployer_addresses.csv', 'a', newline='') as file:
                             writer = csv.writer(file)
                             writer.writerow([pd.to_datetime(row['Date']).strftime('%m/%d/%Y'),'Address', deployer_EOA,row['Account'],row['TweetURL'],chain,'', row['Comment'], checksum_address])
                     else:
                         tag = 'Smart Contract -NO_ADDRESS-'
+                        print('Deployer could not be determined for the contract.')
+                        deployer_EOA =  checksum_address
+
                 elif  check_address_type_BSC( checksum_address) == 'BSC_SMART_CONTRACT':
                     tag = 'Smart Contract'
                     chain = '56'
-                    deployer_EOA = get_contract_deployer_BSC( checksum_address)
-                    print('Smart contract: ' + deployer_EOA)
+                    deployer_EOA = get_contract_deployer_BSC(checksum_address)
+                        
                     if deployer_EOA != 'none':
+                        print('Smart contract deployer: ' + deployer_EOA)
                         with open('deployer_addresses.csv', 'a', newline='') as file:
                             writer = csv.writer(file)
                             writer.writerow([pd.to_datetime(row['Date']).strftime('%m/%d/%Y'),'Address', deployer_EOA,row['Account'],row['TweetURL'],chain,'', row['Comment'], checksum_address])
                     else:
+                        print('Deployer could not be determined for the contract.')
                         tag = 'Smart Contract -NO_ADDRESS-'
                 else : 
                     tag = 'Address'

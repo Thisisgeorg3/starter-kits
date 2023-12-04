@@ -5,8 +5,34 @@ import datetime
 from datetime import timedelta
 from datetime import datetime
 import aiohttp
+import requests
+import json
+
 
 import csv
+with open('secrets.json', 'r') as secrets_file:
+    secrets = json.load(secrets_file)
+
+
+SLACK_URL = secrets.get("SLACK_URL")
+
+def send_slack_message(custom_text):
+    slack_url = SLACK_URL
+    message = {
+        "text": custom_text
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(slack_url, data=json.dumps(message), headers=headers)
+
+    if response.status_code == 200:
+        print("Message sent successfully")
+    else:
+        print("Error sending message. Response code: " + str(response.status_code))
+
 
 
 from .remove_duplicates_tweets import remove_duplicates_tweets
@@ -20,7 +46,7 @@ BEARER_TOKEN = secrets2.get("BEARER_TOKEN")
 
 def create_url(pagination_token=None, since_id=None):
     list_id = "1639353275777441804"
-    max_results = 20
+    max_results = 25
     tweet_fields = "created_at"
     expansions = "author_id"
     user_fields = "username"
@@ -72,7 +98,6 @@ def load_last_hour():
             json.dump({"next_token": None}, f)
         return None
 
-
 def save_tweets_to_csv(tweets, users):
     with open("tweets.csv", "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
@@ -84,6 +109,11 @@ def save_tweets_to_csv(tweets, users):
             username = f'@{next(user["username"] for user in users if user["id"] == author_id)}'
             tweet_link = f'https://twitter.com/{username[1:]}/status/{tweet_id}'
             writer.writerow([tweet_id, username, text, timestamp, tweet_link])
+            timestamp = datetime.fromisoformat(tweet["created_at"].rstrip("Z"))
+            formatted_timestamp = timestamp.strftime('%m/%d/%Y %H:%M')
+            
+            send_slack_message(f"{username}, {text}, {formatted_timestamp}, {tweet_link}")
+
     print(tweet["created_at"])
             
 

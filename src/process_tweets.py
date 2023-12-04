@@ -4,22 +4,9 @@ from datetime import datetime, timedelta
 import requests 
 import json
 
-def send_slack_message(custom_text):
-    slack_url = "https://hooks.slack.com/services/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"
-    message = {
-        "text": custom_text
-    }
 
-    headers = {
-        "Content-Type": "application/json"
-    }
-
-    response = requests.post(slack_url, data=json.dumps(message), headers=headers)
-
-    if response.status_code == 200:
-        print("Message sent successfully")
-    else:
-        print("Error sending message. Response code: " + str(response.status_code))
+with open('secrets.json', 'r') as secrets_file:
+    secrets = json.load(secrets_file)
 
 
 def process_tweets():
@@ -80,8 +67,9 @@ def process_tweets():
 
     # Iterate through each row of the DataFrame
     for index, row in filtered_df.iterrows():
-        send_slack_message(row['Tweet'])
-        
+        # Check if a Tweet URL is present
+        tweet_url = row['TweetURL'] if pd.notna(row['TweetURL']) else ''
+              
         tweet_addresses = extract_addresses(row['Tweet'])
         hxxp_links = re.findall(url_pattern, row['Tweet'])
         
