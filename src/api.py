@@ -15,23 +15,29 @@ with open('secrets.json', 'r') as secrets_file:
 
 
 SLACK_URL = secrets.get("SLACK_URL")
+GOOGLE_URL = secrets.get("GOOGLE_SHEET")
 
 def send_slack_message(custom_text):
     slack_url = SLACK_URL
+    google_url= GOOGLE_URL
     message = {
         "text": custom_text
     }
-
     headers = {
         "Content-Type": "application/json"
     }
 
     response = requests.post(slack_url, data=json.dumps(message), headers=headers)
+    response2 = requests.post(google_url, data=json.dumps(message), headers=headers)
 
     if response.status_code == 200:
-        print("Message sent successfully")
+        print("Messages sent successfully")
     else:
-        print("Error sending message. Response code: " + str(response.status_code))
+        print("Error sending message to slack. Response code: " + str(response.status_code))
+    if response2.status_code == 200:
+        print("Messages to google sent successfully")
+    else:
+        print("Error sending message to google. Response code: " + str(response.status_code))
 
 
 
@@ -46,7 +52,7 @@ BEARER_TOKEN = secrets2.get("BEARER_TOKEN")
 
 def create_url(pagination_token=None, since_id=None):
     list_id = "1639353275777441804"
-    max_results = 25
+    max_results = 1
     tweet_fields = "created_at"
     expansions = "author_id"
     user_fields = "username"
